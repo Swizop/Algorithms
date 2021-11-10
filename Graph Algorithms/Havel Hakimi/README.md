@@ -1,0 +1,1 @@
+https://www.geeksforgeeks.org/find-if-a-degree-sequence-can-form-a-simple-graph-havel-hakimi-algorithm/
