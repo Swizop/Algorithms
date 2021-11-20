@@ -3,9 +3,13 @@
 #include <vector>
 #include <utility>
 #include <string>
+#include <queue>
 
 #define MAX 1000000000
 using namespace std;
+
+ifstream f("bellmanford.in");
+ofstream g("bellmanford.out");
 
 
 class Graph
@@ -13,7 +17,9 @@ class Graph
     int N, M;
 
     vector<int> nodesInfo;
+    queue<int> Q;
     vector<pair<int, pair<int, int>>> weightedEdges;            //first -> edge cost, second -> nodes in edge
+    vector<vector<pair<int, int>>> weightedNeighbours;          // first -> edge weight ; second -> 2nd node in edge
     vector<int> distances;
 
     public:
@@ -22,9 +28,12 @@ class Graph
         void set_nodesInfo(int);
         void set_distances();
 
-        void read_weighted(string);
-        void print_message(string, string);
-        void print_solution(string, vector<int>, int);
+        void read_weightedEdges();
+        void read_weightedNeighbours();
+        void print_message(string);
+        void print_solution(vector<int>, int);
+
+
         void bellman_ford();
 };
 
@@ -33,9 +42,8 @@ void Graph :: set_nodesInfo(int value) { nodesInfo = vector<int> (N + 1, value);
 void Graph :: set_distances() { distances = vector<int> (N + 1, MAX); }
 
 
-void Graph :: read_weighted(string file)
+void Graph :: read_weightedEdges()
 {
-    ifstream f(file);
     f >> N >> M;
 
     int i, x, y, c;
@@ -47,16 +55,25 @@ void Graph :: read_weighted(string file)
 }
 
 
-void Graph :: print_message(string file, string m)
+void Graph :: read_weightedNeighbours()
 {
-    ofstream g(file);
-    g << m;
+    f >> N >> M;
+    weightedNeighbours = vector<vector<pair<int, int>>> (N + 1);
+
+    int i, x, y, c;
+    for(i = 1; i <= M; i++)
+    {
+        f >> x >> y >> c;
+        weightedNeighbours[x].push_back(make_pair(c, y));
+    }
 }
 
 
-void Graph :: print_solution(string file, vector<int> solution, int start)
+void Graph :: print_message(string m) { g << m; }
+
+
+void Graph :: print_solution(vector<int> solution, int start)
 {
-    ofstream g(file);
     for(int i = start; i < solution.size(); i ++)
     {
         g << solution[i] << ' ';
@@ -66,39 +83,44 @@ void Graph :: print_solution(string file, vector<int> solution, int start)
 
 void Graph :: bellman_ford()
 {
-    read_weighted("bellmanford.in");
+    read_weightedNeighbours();
     set_distances();
     set_nodesInfo(0);
 
-    nodesInfo[1] = 1;
     distances[1] = 0;
+    nodesInfo[1] = 1;
+    Q.push(1);
 
-    int i, j, change, c, u, v;
-    for(i = 1; i <= N; i++)
+    int j, c, u, v;
+    while(!Q.empty())
     {
-        change = 0;
-        for(j = 0; j < weightedEdges.size(); j++)
-        {
-            c = weightedEdges[j].first;
-            u = weightedEdges[j].second.first;
-            v = weightedEdges[j].second.second;
+        
+        u = Q.front();
+        nodesInfo[u] = -nodesInfo[u];
+        Q.pop();
 
-            if(nodesInfo[u] >= i)
+        for(j = 0; j < weightedNeighbours[u].size(); j++)
+        {
+            c = weightedNeighbours[u][j].first;
+            v = weightedNeighbours[u][j].second;
+            if(distances[u] + c < distances[v])
             {
-                if(distances[u] + c < distances[v])
+                distances[v] = distances[u] + c;
+                if(nodesInfo[v] <= 0)
                 {
-                    change = 1;
-                    distances[v] = distances[u] + c;
-                    nodesInfo[v] = i + 1;
+                    Q.push(v);
+                    nodesInfo[v] = -nodesInfo[v] + 1;
+                    if(nodesInfo[v] == N)
+                    {
+                        print_message("Ciclu negativ!");
+                        return;
+                    }
                 }
             }
         }
     }
 
-    if(change == 1)
-        print_message("bellmanford.out", "Ciclu negativ!");
-    else
-        print_solution("bellmanford.out", distances, 1);
+    print_solution(distances, 2);
 }
 
 
