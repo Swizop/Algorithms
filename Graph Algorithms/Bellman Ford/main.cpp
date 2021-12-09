@@ -88,13 +88,12 @@ void Graph :: bellman_ford()
     set_nodesInfo(0);
 
     distances[1] = 0;
-    nodesInfo[1] = 1;
-    Q.push(1);
+    nodesInfo[1] = 1;       // if nodesInfo[x] is > 0, then x is currently in the Q. otherwise, it's not
+    Q.push(1);              //Q contains the nodes that were recently updated and whose neighbours need updates accordingly
 
     int j, c, u, v;
     while(!Q.empty())
     {
-        
         u = Q.front();
         nodesInfo[u] = -nodesInfo[u];
         Q.pop();
@@ -106,11 +105,12 @@ void Graph :: bellman_ford()
             if(distances[u] + c < distances[v])
             {
                 distances[v] = distances[u] + c;
-                if(nodesInfo[v] <= 0)
+                if(nodesInfo[v] <= 0)       //v is not currently in Q
                 {
                     Q.push(v);
                     nodesInfo[v] = -nodesInfo[v] + 1;
-                    if(nodesInfo[v] == N)
+                    if(nodesInfo[v] == N)           //nodesInfo[x] = how many times x was added to Q. the maximum length of a chain of vortexes is N - 1. if we have N vortexes
+                                                //then we no longer have a chain (we have a cycle somewhere in it). so if we add x N times to Q, something's wrong
                     {
                         print_message("Ciclu negativ!");
                         return;
